@@ -1,0 +1,147 @@
+﻿using AutoMapper;
+using Newtonsoft.Json;
+using PagedList;
+using Project.Service.Entity;
+using Project.Service.Models;
+using System;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Data.Entity.Migrations;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Web;
+
+namespace Project.Service.Repository
+{
+    public class ModelRepository : IModelRepository
+    {
+
+
+        public VehicleContext Db { get; set; }
+        IMapper Mapper { get; set; }
+
+        public ModelRepository(VehicleContext context, IMapper mapper)
+        {
+            Db = context;
+            Mapper = mapper;
+        }
+
+
+
+        public async Task<List<IVehicleModel>> GetAll(Filter filter, Sort sort, Paging paging)
+        {
+
+
+
+            IEnumerable<VehicleModel> models = Db.VehicleModels;
+
+            if (filter.FilterString != null)
+            {
+                models = models.Where(m => m.Name.Contains(filter.FilterString));
+                if (models == null)
+                {
+                    throw new Exception("No makes by that name");
+                }
+                if (sort != null)
+                {
+                    if (sort.SortField == "Name")
+                    {
+                        switch (sort.SortDirection)
+                        {
+                            case "asc":
+                                models = models.OrderBy(s => s.Name);
+                                break;
+                            case "desc":
+                                models = models.OrderByDescending(s => s.Name);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    else if(sort.SortField=="MakeId"){
+
+                        switch (sort.SortDirection)
+                        {
+                            case "asc":
+                                models = models.OrderBy(s => s.MakeId);
+                                break;
+                            case "desc":
+                                models = models.OrderByDescending(s => s.MakeId);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    else { throw new Exception("You cant sort by this field"); }
+                }
+            }
+            if (paging.Pages != null)
+            {
+                models = models.ToPagedList((int)paging.Pages, (int)paging.PageSize);
+            }
+            var response = await Task.Run(() => Mapper.Map<List<IVehicleModel>>(models.ToList()));
+            return response;
+        }
+
+        public async Task<IVehicleModel> GetById(Guid id)
+        {
+            VehicleModel response = await Db.VehicleModels.FindAsync(id);
+            return Mapper.Map<IVehicleModel>(response);
+        }
+
+        public async Task Add(IVehicleModel model)
+        {
+            VehicleModel newModel = Mapper.Map<VehicleModel>(model);
+            var make = Db.VehicleMakes.Find(newModel.MakeId);
+            if (make == null)
+            {
+                throw new Exception("No make by that id");
+            }
+
+            await Task.Run(() => {
+                System.Diagnostics.Debug.WriteLine(JsonConvert.SerializeObject(newModel));
+                VehicleModel added = Db.VehicleModels.Add(newModel);
+            }
+            );
+            await Db.SaveChangesAsync();
+        }
+
+        public Task<IVehicleModel> Update(IVehicleModel updatedModel, Guid id)
+        {
+            var model = Db.VehicleModels.Find(id);
+            System.Diagnostics.Debug.WriteLine(JsonConvert.SerializeObject(model));
+            if (model != null)
+            {
+                try
+                {
+                    model.Name = updatedModel.Name;
+                    model.MakeId = updatedModel.MakeId;
+                    model.Abrv = updatedModel.Abrv;
+
+                    Db.SaveChanges();
+                    return Task.Run(() => Mapper.Map<IVehicleModel>(model));
+                }
+                catch(Exception ex)
+                {
+                    throw ex;
+                }
+            }
+            else
+            {
+                throw new ArgumentException("No model listed by that Id", nameof(id));
+
+            }
+        }
+
+
+        public async Task Delete(Guid id)
+        {
+            var model = Db.VehicleModels.Find(id);
+            Db.VehicleModels.Remove(model);
+            await Db.SaveChangesAsync();
+           
+
+
+        }
+    }
+}
