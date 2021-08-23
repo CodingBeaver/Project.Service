@@ -27,8 +27,15 @@ namespace Project.Service.Controllers
         [HttpGet]
         public async Task<HttpResponseMessage> GetAll([FromUri] Filter filter, [FromUri] Sort sort, [FromUri] Paging paging)
         {
-            var response = Mapper.Map<List<TempModel>>(await Service.ModelGetAll(filter, sort, paging));
-            return Request.CreateResponse(response);
+            try
+            {
+                var response = Mapper.Map<List<TempModel>>(await Service.ModelGetAll(filter, sort, paging));
+                return Request.CreateResponse(response);
+            }
+            catch(Exception ex)
+            {
+                return Request.CreateResponse(System.Net.HttpStatusCode.BadRequest, ex.Message);
+            }
         }
 
 
@@ -70,7 +77,7 @@ namespace Project.Service.Controllers
             }
             catch(Exception ex)
             {
-                return Request.CreateResponse(System.Net.HttpStatusCode.BadRequest, ex);
+                return Request.CreateResponse(System.Net.HttpStatusCode.BadRequest, ex.Message);
             }
 
 
@@ -80,9 +87,15 @@ namespace Project.Service.Controllers
 
         public async Task<HttpResponseMessage> Delete([FromUri] Guid id)
         {
-
-            await Service.DeleteModel(id);
-            return Request.CreateResponse(System.Net.HttpStatusCode.NoContent);
+            try
+            {
+                await Service.DeleteModel(id);
+                return Request.CreateResponse(System.Net.HttpStatusCode.NoContent);
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateResponse(System.Net.HttpStatusCode.NotFound, ex.Message);
+            }
         }
 
     }

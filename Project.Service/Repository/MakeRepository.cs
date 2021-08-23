@@ -28,18 +28,12 @@ namespace Project.Service.Repository
         {
             IEnumerable<VehicleMake> makes = Db.VehicleMakes;
 
-            System.Diagnostics.Debug.WriteLine(JsonConvert.SerializeObject(filter));
-            System.Diagnostics.Debug.WriteLine(JsonConvert.SerializeObject(sort));
-            System.Diagnostics.Debug.WriteLine(JsonConvert.SerializeObject(paging));
             if (filter.FilterString != null)
             {
-               makes= makes.Where(m => m.Name.Contains(filter.FilterString));
-                if (makes == null)
-                {
-                    throw new Exception("No makes by that name");
-                }
-                if (sort != null)
-                {
+                makes = makes.Where(m => m.Name.Contains(filter.FilterString));
+            }
+            if (sort != null)
+            {
                     switch (sort.SortDirection)
                     {
                         case "asc":
@@ -52,7 +46,7 @@ namespace Project.Service.Repository
                             break;
                     }
                 }
-            }
+            
             if (paging.Pages != null)
             {
                 makes=makes.ToPagedList((int)paging.Pages, (int)paging.PageSize);

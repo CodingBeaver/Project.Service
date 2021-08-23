@@ -38,9 +38,6 @@ namespace Project.Service.Repository
             if (filter.FilterString != null)
             {
                 models = models.Where(m => m.Name.Contains(filter.FilterString));
-                if (models == null)
-                {
-                    throw new Exception("No makes by that name");
                 }
                 if (sort != null)
                 {
@@ -72,9 +69,9 @@ namespace Project.Service.Repository
                                 break;
                         }
                     }
-                    else { throw new Exception("You cant sort by this field"); }
+                    else { throw new Exception("You can't sort Models by this field"); }
                 }
-            }
+            
             if (paging.Pages != null)
             {
                 models = models.ToPagedList((int)paging.Pages, (int)paging.PageSize);
@@ -99,7 +96,7 @@ namespace Project.Service.Repository
             }
 
             await Task.Run(() => {
-                System.Diagnostics.Debug.WriteLine(JsonConvert.SerializeObject(newModel));
+                //System.Diagnostics.Debug.WriteLine(JsonConvert.SerializeObject(newModel));
                 VehicleModel added = Db.VehicleModels.Add(newModel);
             }
             );

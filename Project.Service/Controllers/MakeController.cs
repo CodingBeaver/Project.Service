@@ -29,10 +29,15 @@ namespace Project.Service.Controllers
         //[Route("api/make/{FilterSting?}&{SortField?}&{SortDirection?}&{Pages?}&{PagesSize?}")]
         public async Task<HttpResponseMessage> GetAll([FromUri]Filter filter,[FromUri]Sort sort, [FromUri]Paging paging)
         {
+            try
+            {
+                var response = Mapper.Map<List<TempMake>>(await Service.MakeGetAll(filter, sort, paging));
+                return Request.CreateResponse(response);
+            }
+            catch(Exception ex) {
+                return Request.CreateResponse(ex.Message);
+            }
             
-                    
-            var response = Mapper.Map<List<TempMake>>(await Service.MakeGetAll(filter,sort,paging));
-            return Request.CreateResponse(response);
         }
 
 
@@ -50,9 +55,16 @@ namespace Project.Service.Controllers
         [HttpPost]
         public async Task<HttpResponseMessage> Post([FromBody] TempMake newMake)
         {
-            var make = Mapper.Map<IVehicleMake>(newMake);
-            await Service.AddMake(make);
-            return Request.CreateResponse(System.Net.HttpStatusCode.Created);
+            try
+            {
+                var make = Mapper.Map<IVehicleMake>(newMake);
+                await Service.AddMake(make);
+                return Request.CreateResponse(System.Net.HttpStatusCode.Created);
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateResponse(System.Net.HttpStatusCode.BadRequest, ex.Message);
+            }
         }
 
 
@@ -63,8 +75,8 @@ namespace Project.Service.Controllers
                 var make = Mapper.Map<IVehicleMake>(update);
                 var response=await Service.UpdateMake(make, id);
                 return Request.CreateResponse(response);
-            } catch {
-                return Request.CreateResponse(System.Net.HttpStatusCode.BadRequest);
+            } catch (Exception ex){
+                return Request.CreateResponse(System.Net.HttpStatusCode.BadRequest, ex.Message);
             }
             
             
@@ -74,9 +86,15 @@ namespace Project.Service.Controllers
 
         public async Task<HttpResponseMessage> Delete([FromUri] Guid id)
         {
-
-            await Service.DeleteMake(id);
-            return Request.CreateResponse(System.Net.HttpStatusCode.NoContent);
+            try
+            {
+                await Service.DeleteMake(id);
+                return Request.CreateResponse(System.Net.HttpStatusCode.NoContent);
+            }
+            catch (Exception ex)
+            {
+                return Request.CreateResponse(System.Net.HttpStatusCode.BadRequest, ex.Message);
+            }
         }
 
 
